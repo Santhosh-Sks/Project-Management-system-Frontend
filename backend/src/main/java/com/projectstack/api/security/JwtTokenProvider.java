@@ -1,5 +1,6 @@
 package com.projectstack.api.security;
 
+import com.projectstack.api.repository.TokenBlacklistRepository;
 import io.jsonwebtoken.Claims;
 import io.jsonwebtoken.ExpiredJwtException;
 import io.jsonwebtoken.Jwts;
@@ -11,6 +12,7 @@ import io.jsonwebtoken.security.SignatureException;
 import jakarta.annotation.PostConstruct;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.userdetails.UserDetails;
@@ -100,7 +102,14 @@ public class JwtTokenProvider {
     public boolean validateToken(String authToken) {
         try {
             Jwts.parserBuilder().setSigningKey(key).build().parseClaimsJws(authToken);
-            return true;
+
+            // Check if the token is blacklisted
+            if (tokenBlacklistRepository.existsByToken(authToken)) {
+                logger.error("JWT token is blacklisted: {}", authToken);
+                return false; // Reject blacklisted token
+            }
+
+            return true; // Token is valid
         } catch (SignatureException e) {
             logger.error("Invalid JWT signature: {}", e.getMessage());
         } catch (MalformedJwtException e) {
@@ -112,8 +121,10 @@ public class JwtTokenProvider {
         } catch (IllegalArgumentException e) {
             logger.error("JWT claims string is empty: {}", e.getMessage());
         }
+
         return false;
     }
+
 
     private boolean isTokenExpired(String token) {
         try {
@@ -127,4 +138,9 @@ public class JwtTokenProvider {
             return true;
         }
     }
+    @Autowired
+    private TokenBlacklistRepository tokenBlacklistRepository;
+
+
+
 }

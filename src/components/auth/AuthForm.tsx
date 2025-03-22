@@ -121,7 +121,7 @@ export const AuthForm: React.FC<AuthFormProps> = ({
               type="text"
               value={formData.name}
               onChange={handleChange}
-              placeholder="John Doe"
+              placeholder="Username"
               autoComplete="name"
               className={errors.name ? "border-destructive" : ""}
             />
@@ -139,7 +139,7 @@ export const AuthForm: React.FC<AuthFormProps> = ({
             type="email"
             value={formData.email}
             onChange={handleChange}
-            placeholder="john@example.com"
+            placeholder="Enter your email"
             autoComplete="email"
             className={errors.email ? "border-destructive" : ""}
           />
@@ -157,7 +157,7 @@ export const AuthForm: React.FC<AuthFormProps> = ({
               type="tel"
               value={formData.phone}
               onChange={handleChange}
-              placeholder="1234567890"
+              placeholder="+91"
               autoComplete="tel"
               className={errors.phone ? "border-destructive" : ""}
             />

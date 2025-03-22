@@ -1,4 +1,3 @@
-
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { ArrowLeftIcon, CalendarIcon, UsersIcon } from 'lucide-react';
@@ -8,7 +7,7 @@ import { Project } from '@/lib/types';
 import { cn } from "@/lib/utils";
 
 interface ProjectHeaderProps {
-  project: Project;
+  project: Project | null;
   onInviteClick: () => void;
 }
 
@@ -16,6 +15,8 @@ export const ProjectHeader: React.FC<ProjectHeaderProps> = ({
   project,
   onInviteClick
 }) => {
+  if (!project) return <div>Loading...</div>; // Handle null project gracefully
+
   const getStatusColor = (status: Project['status']) => {
     switch (status) {
       case 'active':
@@ -31,7 +32,8 @@ export const ProjectHeader: React.FC<ProjectHeaderProps> = ({
     }
   };
 
-  const formatDate = (dateString: string) => {
+  const formatDate = (dateString?: string) => {
+    if (!dateString) return 'Unknown';
     const date = new Date(dateString);
     return new Intl.DateTimeFormat('en-US', {
       month: 'long',
@@ -57,11 +59,11 @@ export const ProjectHeader: React.FC<ProjectHeaderProps> = ({
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
           <Badge className={cn("mb-2", getStatusColor(project.status))}>
-            {project.status.charAt(0).toUpperCase() + project.status.slice(1)}
+            {project.status ? (project.status.charAt(0).toUpperCase() + project.status.slice(1)) : "Unknown"}
           </Badge>
-          <h1 className="text-3xl font-bold">{project.name}</h1>
+          <h1 className="text-3xl font-bold">{project.name || "Untitled Project"}</h1>
           <p className="text-muted-foreground mt-2 max-w-3xl">
-            {project.description}
+            {project.description || "No description available."}
           </p>
         </div>
 
@@ -73,7 +75,6 @@ export const ProjectHeader: React.FC<ProjectHeaderProps> = ({
         </div>
       </div>
 
-      {/* Project stats */}
       <div className="flex flex-wrap gap-6 mt-2">
         <div className="flex items-center gap-2 text-sm">
           <CalendarIcon className="h-4 w-4 text-muted-foreground" />
@@ -84,16 +85,16 @@ export const ProjectHeader: React.FC<ProjectHeaderProps> = ({
         <div className="flex items-center gap-2 text-sm">
           <UsersIcon className="h-4 w-4 text-muted-foreground" />
           <span className="text-muted-foreground">Team:</span>
-          <span>{project.members.length} members</span>
+          <span>{project.members?.length || 0} members</span>
         </div>
       </div>
 
       <div className="flex flex-wrap gap-2 mt-1">
-        {project.techStack.map((tech) => (
+        {project.techStack?.map((tech) => (
           <Badge key={tech} variant="outline" className="bg-accent/50">
             {tech}
           </Badge>
-        ))}
+        )) || "No technologies listed."}
       </div>
     </div>
   );

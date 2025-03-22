@@ -2,7 +2,8 @@
 import axios from "axios";
 import { Comment } from "@/lib/types";
 
-const API_URL = "/api";
+const API_URL = "http://localhost:8080/api"; // Add full URL
+
 
 // Get all comments for a task
 export const fetchTaskComments = async (projectId: string, taskId: string) => {

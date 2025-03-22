@@ -1,4 +1,3 @@
-
 package com.projectstack.api.controller;
 
 import com.projectstack.api.model.Project;
@@ -12,12 +11,12 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import org.springframework.web.bind.annotation.*;
 
-
 import java.util.List;
 import java.util.Optional;
 
 @RestController
 @RequestMapping("/api/projects")
+@CrossOrigin(origins = "*") // Allow frontend requests
 public class ProjectController {
 
     @Autowired
@@ -39,7 +38,7 @@ public class ProjectController {
 
     @PostMapping
     public ResponseEntity<?> createProject(@Valid @RequestBody Project project,
-                                         @AuthenticationPrincipal UserDetailsImpl userDetails) {
+                                           @AuthenticationPrincipal UserDetailsImpl userDetails) {
         Project savedProject = projectService.createProject(project, userDetails.getId());
         if (savedProject != null) {
             return ResponseEntity.ok(savedProject);
@@ -49,23 +48,19 @@ public class ProjectController {
 
     @PutMapping("/{id}")
     public ResponseEntity<?> updateProject(@PathVariable String id,
-                                         @Valid @RequestBody Project projectDetails,
-                                         @AuthenticationPrincipal UserDetailsImpl userDetails) {
+                                           @Valid @RequestBody Project projectDetails,
+                                           @AuthenticationPrincipal UserDetailsImpl userDetails) {
         Optional<Project> updatedProject = projectService.updateProject(id, projectDetails, userDetails.getId());
-        if (updatedProject.isPresent()) {
-            return ResponseEntity.ok(updatedProject.get());
-        }
-        return ResponseEntity.notFound().build();
+        return updatedProject.map(ResponseEntity::ok)
+                .orElseGet(() -> ResponseEntity.notFound().build());
     }
 
     @PostMapping("/{id}/invites")
     public ResponseEntity<?> inviteMembers(@PathVariable String id,
-                                         @Valid @RequestBody InviteRequest inviteRequest,
-                                         @AuthenticationPrincipal UserDetailsImpl userDetails) {
+                                           @Valid @RequestBody InviteRequest inviteRequest,
+                                           @AuthenticationPrincipal UserDetailsImpl userDetails) {
         boolean success = projectService.inviteMembers(id, inviteRequest, userDetails.getId());
-        if (success) {
-            return ResponseEntity.ok(new MessageResponse("Invitations sent successfully"));
-        }
-        return ResponseEntity.notFound().build();
+        return success ? ResponseEntity.ok(new MessageResponse("Invitations sent successfully"))
+                : ResponseEntity.notFound().build();
     }
 }

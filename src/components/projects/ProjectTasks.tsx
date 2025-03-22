@@ -1,17 +1,16 @@
-
-import React, { useState } from 'react';
+import React from 'react';
 import { PlusIcon } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { TaskBoard } from '@/components/tasks/TaskBoard';
-import { Task, TaskStatus, TeamMember, Comment } from '@/lib/types';
+import { Task, Comment } from '@/lib/types';
 import { Textarea } from '@/components/ui/textarea';
 import { Badge } from '@/components/ui/Badge';
 import { Avatar, AvatarFallback, AvatarImage } from '@/components/ui/avatar';
 import { cn } from "@/lib/utils";
 
 interface ProjectTasksProps {
-  tasks: Task[];
-  comments: Record<string, Comment[]>;
+  tasks?: Task[];  // Default to an empty array
+  comments?: Record<string, Comment[]>; // Default to an empty object
   onTaskClick: (taskId: string) => void;
   onAddTask: () => void;
   selectedTask: Task | null;
@@ -21,8 +20,8 @@ interface ProjectTasksProps {
 }
 
 export const ProjectTasks: React.FC<ProjectTasksProps> = ({
-  tasks,
-  comments,
+  tasks = [],
+  comments = {},
   onTaskClick,
   onAddTask,
   selectedTask,
@@ -30,7 +29,9 @@ export const ProjectTasks: React.FC<ProjectTasksProps> = ({
   setNewComment,
   handleAddComment
 }) => {
+  
   const formatTime = (dateString: string) => {
+    if (!dateString) return '';
     const date = new Date(dateString);
     return new Intl.DateTimeFormat('en-US', {
       hour: '2-digit',
@@ -78,25 +79,35 @@ export const ProjectTasks: React.FC<ProjectTasksProps> = ({
             
             <h4 className="text-sm font-medium mb-2">Comments</h4>
             <div className="max-h-[300px] overflow-y-auto mb-4">
-              {comments[selectedTask.id]?.length ? (
-                comments[selectedTask.id].map(comment => (
-                  <div key={comment.id} className="mb-3 pb-3 border-b">
-                    <div className="flex items-center gap-2 mb-1">
-                      <Avatar className="h-6 w-6">
-                        <AvatarImage src={comment.author.avatar} alt={comment.author.name} />
-                        <AvatarFallback>{comment.author.name.charAt(0)}</AvatarFallback>
-                      </Avatar>
-                      <span className="text-sm font-medium">{comment.author.name}</span>
-                      <span className="text-xs text-muted-foreground">
-                        {formatTime(comment.createdAt)}
-                      </span>
-                    </div>
-                    <p className="text-sm">{comment.text}</p>
-                  </div>
-                ))
-              ) : (
-                <p className="text-sm text-muted-foreground">No comments yet</p>
-              )}
+            {selectedTask?.id && comments[selectedTask.id]?.length ? (
+  comments[selectedTask.id].map(comment => (
+    <div key={comment.id} className="mb-3 pb-3 border-b">
+      <div className="flex items-center gap-2 mb-1">
+        {comment.author ? (
+          <Avatar className="h-6 w-6">
+            {comment.author.avatar ? (
+              <AvatarImage src={comment.author.avatar} alt={comment.author.name} />
+            ) : (
+              <AvatarFallback>{comment.author.name?.charAt(0) || "?"}</AvatarFallback>
+            )}
+          </Avatar>
+        ) : (
+          <Avatar className="h-6 w-6">
+            <AvatarFallback>?</AvatarFallback>
+          </Avatar>
+        )}
+        <span className="text-sm font-medium">{comment.author?.name || "Unknown"}</span>
+        <span className="text-xs text-muted-foreground">
+          {formatTime(comment.createdAt)}
+        </span>
+      </div>
+      <p className="text-sm">{comment.text}</p>
+    </div>
+  ))
+) : (
+  <p className="text-sm text-muted-foreground">No comments yet</p>
+)}
+
             </div>
             
             <div className="flex gap-2">

@@ -1,25 +1,26 @@
 
 package com.projectstack.api.controller;
 
+import com.projectstack.api.model.TokenBlacklist;
 import com.projectstack.api.payload.request.LoginRequest;
 import com.projectstack.api.payload.request.SignupRequest;
 import com.projectstack.api.payload.response.JwtResponse;
 import com.projectstack.api.payload.response.MessageResponse;
+import com.projectstack.api.repository.TokenBlacklistRepository;
 import com.projectstack.api.repository.UserRepository;
 import com.projectstack.api.service.AuthService;
 import jakarta.validation.Valid;
 import org.slf4j.Logger;
+
+import com.projectstack.api.payload.request.OTPRequest;
+import com.projectstack.api.payload.response.OTPResponse;
+import com.projectstack.api.service.OTPService;
 import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.web.bind.annotation.*;
-
-import jakarta.servlet.FilterChain;
-import jakarta.servlet.ServletException;
-import jakarta.servlet.http.HttpServletRequest;
-import jakarta.servlet.http.HttpServletResponse;
 
 
 @CrossOrigin(origins = "*", maxAge = 3600)
@@ -86,5 +87,46 @@ public class AuthController {
     @GetMapping("/check")
     public ResponseEntity<?> checkAuthStatus() {
         return ResponseEntity.ok(new MessageResponse("Authentication service is running", true));
+    }
+
+    @Autowired
+    private TokenBlacklistRepository tokenBlacklistRepository;
+
+    @PostMapping("/logout")
+    public ResponseEntity<MessageResponse> logout(@RequestHeader("Authorization") String token) {
+        if (token.startsWith("Bearer ")) {
+            token = token.substring(7); // Remove "Bearer " prefix
+        }
+
+        if (!tokenBlacklistRepository.existsByToken(token)) {
+            long expirationTime = System.currentTimeMillis() + 86400000; // 24 hours
+            TokenBlacklist blacklistedToken = new TokenBlacklist(token, expirationTime);
+            tokenBlacklistRepository.save(blacklistedToken);
+        }
+
+        return ResponseEntity.ok(new MessageResponse("User logged out successfully", true));
+    }
+
+
+    @Autowired
+    private OTPService otpService;
+
+    @PostMapping("/send-otp")
+    public ResponseEntity<MessageResponse> sendOtp(@RequestParam String email) {
+        String otp = otpService.generateOTP();
+        System.out.println("Generated OTP: " + otp);  // Debugging purpose
+        otpService.sendOTPEmail(email);
+        return ResponseEntity.ok(new MessageResponse("OTP sent successfully", true));
+    }
+
+
+    @PostMapping("/verify-otp")
+    public ResponseEntity<OTPResponse> verifyOtp(@RequestBody OTPRequest otpRequest) {
+        boolean isValid = otpService.validateOTP(otpRequest.getOtp());
+        if (isValid) {
+            return ResponseEntity.ok(new OTPResponse("OTP verified successfully", true));
+        } else {
+            return ResponseEntity.badRequest().body(new OTPResponse("Invalid OTP", false));
+        }
     }
 }

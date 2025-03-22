@@ -1,5 +1,4 @@
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { Navbar } from '@/components/layout/Navbar';
 import { PageContainer } from '@/components/layout/PageContainer';
@@ -17,7 +16,6 @@ import {
   ChevronDownIcon, 
   SearchIcon 
 } from 'lucide-react';
-import { Project } from '@/lib/types';
 import { useToast } from '@/hooks/use-toast';
 import { fetchUserProjects, createProject } from '@/services/projectService';
 import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
@@ -28,10 +26,14 @@ const Dashboard = () => {
   const [isCreating, setIsCreating] = useState(false);
   const { toast } = useToast();
   const queryClient = useQueryClient();
+  
+  // Retrieve user details from localStorage
+  const storedUser = localStorage.getItem('user');
+  const user = storedUser ? JSON.parse(storedUser) : null;
 
   // Fetch user's projects
   const { 
-    data: projects = [], 
+    data: projects = [],
     isLoading,
     error 
   } = useQuery({
@@ -39,7 +41,6 @@ const Dashboard = () => {
     queryFn: fetchUserProjects
   });
 
-  // Create a new project
   const createProjectMutation = useMutation({
     mutationFn: createProject,
     onSuccess: () => {
@@ -65,25 +66,21 @@ const Dashboard = () => {
     createProjectMutation.mutate(projectData);
   };
 
-  // Filter projects based on search query and status filter
-  const filteredProjects = projects.filter(project => {
-    const matchesSearch = 
-      project.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      project.description.toLowerCase().includes(searchQuery.toLowerCase());
-    
-    const matchesStatus = statusFilter === 'all' || project.status === statusFilter;
-    
-    return matchesSearch && matchesStatus;
-  });
-
-  const mockUser = {
-    name: 'John Doe',
-    email: 'john@example.com',
-  };
+  const filteredProjects = Array.isArray(projects) 
+    ? projects.filter(project => {
+        const matchesSearch = 
+          project.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
+          project.description.toLowerCase().includes(searchQuery.toLowerCase());
+        
+        const matchesStatus = statusFilter === 'all' || project.status === statusFilter;
+        
+        return matchesSearch && matchesStatus;
+      })
+    : [];
 
   return (
     <>
-      <Navbar user={mockUser} />
+      <Navbar user={user} />
       <PageContainer>
         <div className="flex flex-col space-y-8">
           <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
@@ -93,13 +90,11 @@ const Dashboard = () => {
                 Manage and collaborate on all your projects
               </p>
             </div>
-            
             <CreateProjectDialog 
               onCreateProject={handleCreateProject}
               isCreating={isCreating}
             />
           </div>
-          
           <div className="flex flex-col sm:flex-row gap-4 items-start sm:items-center">
             <div className="relative w-full sm:w-auto flex-1 max-w-sm">
               <SearchIcon className="absolute left-3 top-1/2 transform -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -110,7 +105,6 @@ const Dashboard = () => {
                 className="pl-9"
               />
             </div>
-            
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button variant="outline" className="flex gap-2 h-10">
@@ -119,25 +113,14 @@ const Dashboard = () => {
                 </Button>
               </DropdownMenuTrigger>
               <DropdownMenuContent>
-                <DropdownMenuItem onClick={() => setStatusFilter('all')}>
-                  All
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setStatusFilter('active')}>
-                  Active
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setStatusFilter('completed')}>
-                  Completed
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setStatusFilter('on-hold')}>
-                  On Hold
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={() => setStatusFilter('archived')}>
-                  Archived
-                </DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setStatusFilter('all')}>All</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setStatusFilter('active')}>Active</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setStatusFilter('completed')}>Completed</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setStatusFilter('on-hold')}>On Hold</DropdownMenuItem>
+                <DropdownMenuItem onClick={() => setStatusFilter('archived')}>Archived</DropdownMenuItem>
               </DropdownMenuContent>
             </DropdownMenu>
           </div>
-          
           {isLoading ? (
             <div className="flex justify-center items-center py-20">
               <div className="loader mr-2" />
@@ -146,9 +129,7 @@ const Dashboard = () => {
           ) : error ? (
             <div className="text-center py-20">
               <h3 className="text-lg font-medium text-destructive">Error loading projects</h3>
-              <p className="text-muted-foreground mt-1 mb-6">
-                Please try again later
-              </p>
+              <p className="text-muted-foreground mt-1 mb-6">Please try again later</p>
             </div>
           ) : filteredProjects.length > 0 ? (
             <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-6">
@@ -164,7 +145,6 @@ const Dashboard = () => {
                   ? "Try adjusting your search or filters" 
                   : "Create your first project to get started"}
               </p>
-              
               {!searchQuery && statusFilter === 'all' && (
                 <CreateProjectDialog 
                   onCreateProject={handleCreateProject}

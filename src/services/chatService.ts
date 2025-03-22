@@ -2,7 +2,8 @@
 import axios from "axios";
 import { ChatMessage } from "@/lib/types";
 
-const API_URL = "/api";
+const API_URL = "http://localhost:8080/api"; // Add full URL
+
 
 // Get all chat messages for a project
 export const fetchProjectChat = async (projectId: string) => {

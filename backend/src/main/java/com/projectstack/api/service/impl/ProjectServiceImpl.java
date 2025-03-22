@@ -1,4 +1,3 @@
-
 package com.projectstack.api.service.impl;
 
 import com.projectstack.api.model.Project;
@@ -42,7 +41,7 @@ public class ProjectServiceImpl implements ProjectService {
             creator.setName(user.get().getName());
             creator.setEmail(user.get().getEmail());
             creator.setRole("admin");
-            
+
             project.getMembers().add(creator);
             return projectRepository.save(project);
         }
@@ -58,7 +57,7 @@ public class ProjectServiceImpl implements ProjectService {
             updatedProject.setDescription(projectDetails.getDescription());
             updatedProject.setStatus(projectDetails.getStatus());
             updatedProject.setTechStack(projectDetails.getTechStack());
-            
+
             return Optional.of(projectRepository.save(updatedProject));
         }
         return Optional.empty();
@@ -78,14 +77,14 @@ public class ProjectServiceImpl implements ProjectService {
                     newMember.setName(user.get().getName());
                     newMember.setEmail(user.get().getEmail());
                     newMember.setRole(inviteRequest.getRole());
-                    
+
                     if (!existingProject.getMembers().stream()
                             .anyMatch(m -> m.getId().equals(newMember.getId()))) {
                         existingProject.getMembers().add(newMember);
                     }
                 }
             }
-            
+
             projectRepository.save(existingProject);
             return true;
         }

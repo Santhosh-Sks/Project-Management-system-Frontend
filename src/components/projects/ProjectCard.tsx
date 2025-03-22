@@ -17,7 +17,7 @@ interface ProjectCardProps {
 }
 
 export const ProjectCard: React.FC<ProjectCardProps> = ({ project, className }) => {
-  const getStatusColor = (status: Project['status']) => {
+  const getStatusColor = (status: Project['status'] | 'unknown') => {
     switch (status) {
       case 'active':
         return 'bg-green-100 text-green-800 dark:bg-green-900/30 dark:text-green-400';
@@ -52,9 +52,10 @@ export const ProjectCard: React.FC<ProjectCardProps> = ({ project, className }) 
         <CardHeader className="p-4 pb-0">
           <div className="flex justify-between items-start">
             <div>
-              <Badge className={cn("mb-2 font-normal", getStatusColor(project.status))}>
-                {project.status.charAt(0).toUpperCase() + project.status.slice(1)}
-              </Badge>
+            <Badge className={cn("mb-2 font-normal", getStatusColor(project?.status || 'unknown'))}>
+  {project?.status ? project.status.charAt(0).toUpperCase() + project.status.slice(1) : "Unknown"}
+</Badge>
+
               <h3 className="text-lg font-semibold line-clamp-1 group-hover:text-primary transition-colors">
                 {project.name}
               </h3>
